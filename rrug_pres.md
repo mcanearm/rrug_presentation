@@ -11,7 +11,8 @@ About Me
 - In Reno for ~1 year
 - Math, Econ, and social science background
 - I like R quite a bit.
-- Focus on software architecture as a Data Scientist
+- Focused on architecture in R
+- Some mathematical modelling
 
 About Clear Capital
 ==================================================
@@ -30,6 +31,31 @@ Outline
 - Clusters
 - Lessons
 
+Parallel
+==================================================
+* Base package in R
+* Simplest way to get parallelizing
+* Lots of functions come from the SNOW package, which is now deprecated
+* `parLapply, parSapply, clusterApplyLB, clusterApply`...
+
+Good Use Cases
+==================================================
+* Map-reduce algorithms
+* Monte Carlo simulations
+* Bootstrapping and replication
+* Complex functions
+
+Bad Use Cases
+==================================================
+* Iterative loops (output depends on previous step)
+* Continuous edits required on an object
+* Very simple, high speed, and/or low volume requests
+* File Writes
+
+Managing Expectations
+==================================================
+<font size="24">**Parallelism adds overhead.**</font>
+
 Simplest Example
 ========================================================
 
@@ -40,7 +66,7 @@ median(exampleData)
 ```
 
 ```
-[1] 50.11368
+[1] 52.97137
 ```
 
 Is the median accurate?
@@ -58,7 +84,15 @@ system.time(
 
 ```
    user  system elapsed 
-  1.879   0.033   1.940 
+  2.084   0.037   2.125 
+```
+
+```r
+mean(medians)
+```
+
+```
+[1] 52.95431
 ```
 
 Resulting Distribution
@@ -84,7 +118,15 @@ system.time(
 
 ```
    user  system elapsed 
-  2.122   0.152   0.867 
+  0.962   0.087   0.540 
+```
+
+```r
+mean(unlist(medians))
+```
+
+```
+[1] 52.90077
 ```
 
 Same Distribution!
@@ -94,8 +136,9 @@ Same Distribution!
 
 What Happened?
 ==================================================
-- `mclapply` creates multiple processes for R and then returns the results
-- Access to all the objects the parent process has access to, including global variables.
+- `mclapply` creates multiple processes of R for operations and then returns the results
+- Each child has access to all the objects in the parent environment, including global variables.
+- *Implicit Parallelism*
 
 Fork Clusters
 ==================================================
@@ -112,7 +155,7 @@ system.time(
 
 ```
    user  system elapsed 
-  0.019   0.004   0.854 
+  0.022   0.004   0.514 
 ```
 
 ```r
@@ -137,6 +180,23 @@ The (P)Sock Cluster
 ![image](socks.jpg)
 
 
+Clusters Compared
+==================================================
+
+Fork Cluster
+- Can only be on one machine
+- No copies of data from core to core
+- Implicit Object Sharing
+- Explicit Parallelism
+
+***
+
+PSOCK Cluster
+- Multiple machines
+- Must copy data between cores
+- Explicit Object Sharing
+- Explicit Parallelism
+
 Split Strategy 1 - Create Cluster Across All your Cores
 ==================================================
 * Does not have to be one machine (Advantage over Fork)
@@ -144,16 +204,16 @@ Split Strategy 1 - Create Cluster Across All your Cores
 * Maximum of 128 "nodes", i.e. 128 cores in a single cluster with PSOCK!
 
 
-Split Strategy 2 - The Parent-Child Split (Map-Reduce)
+Split Strategy 2 - The Parent-Child-Grandchild Split (Map-Reduce)
 ==================================================
-* Divide the work into reasonable chunks and assign each chunk a key
-* Create a cluster with 1 node on each server. These are your parent processes.
-* On each parent process spawned by this cluster, create **n** child processes,
+1. Divide the work into reasonable chunks and assign each chunk a key
+2. Create a cluster with 1 node on each server. These are your first child processes.
+3. On each parent process spawned by this cluster, create **n** (grand)child processes,
 where **n** is the number of cores on the box (`detectCores()`).
-* Copy the original data between each box with a key pairing
-* Write function which uses the child cluster for processing
-* Apply function over the keys via the parent cluster - each box runs childs processes controlled by a single master process
-
+4. Send necessary data to boxes and all clusters, both those with the child processes and grandchild processes
+5. Apply function which uses the granchildren processes
+6. Return results from grandchild processes to child processes
+7. Return results from child processes to master process
 
 Why not just make one cluster?
 ==================================================
@@ -165,7 +225,7 @@ Why not just make one cluster?
 
 Extended Clear Capital Example
 ==================================================
-
+Main uses are data updates, model runs, and file parsing.
 
 Caveats
 ==================================================
@@ -177,6 +237,9 @@ Caveats
 
 When is serial better?
 ==================================================
+* Few iterations
+* Low Complexity
+* Vectorized vs. unvectorized code
 
 
 Conclusion
@@ -187,5 +250,5 @@ Conclusion
 * Well written serial code is often more performant than poorly written
 parallel code
 
-**Slow serial code is slow parallel code.**
+<font size = "24">**Slow serial code is slow parallel code.**</font>
 
