@@ -28,7 +28,7 @@ Outline
 - Forks
 - PSOCK
 - Clusters
-
+- Lessons
 
 Simplest Example
 ========================================================
@@ -40,7 +40,7 @@ median(exampleData)
 ```
 
 ```
-[1] 55.09117
+[1] 50.11368
 ```
 
 Is the median accurate?
@@ -58,7 +58,7 @@ system.time(
 
 ```
    user  system elapsed 
-  1.913   0.039   1.981 
+  1.879   0.033   1.940 
 ```
 
 Resulting Distribution
@@ -84,7 +84,7 @@ system.time(
 
 ```
    user  system elapsed 
-  2.118   0.151   0.905 
+  2.122   0.152   0.867 
 ```
 
 Same Distribution!
@@ -94,7 +94,7 @@ Same Distribution!
 
 What Happened?
 ==================================================
-- \code{mclapply} creates multiple processes for R and then returns the results
+- `mclapply` creates multiple processes for R and then returns the results
 - Access to all the objects the parent process has access to, including global variables.
 
 Fork Clusters
@@ -112,7 +112,7 @@ system.time(
 
 ```
    user  system elapsed 
-  0.021   0.004   0.870 
+  0.019   0.004   0.854 
 ```
 
 ```r
@@ -126,7 +126,7 @@ Fork Clusters in a Nutshell
 * Can't use `mclapply` within a cluster!
 * Zombie processes...
 
-![image](fork-03.jpg)
+![image](forkCluster.jpeg)
 
 
 The (P)Sock Cluster
@@ -144,26 +144,48 @@ Split Strategy 1 - Create Cluster Across All your Cores
 * Maximum of 128 "nodes", i.e. 128 cores in a single cluster with PSOCK!
 
 
-Split Strategy 2 - The Mini-Me Cluster
+Split Strategy 2 - The Parent-Child Split (Map-Reduce)
 ==================================================
 * Divide the work into reasonable chunks and assign each chunk a key
-* Create a cluster with 1 node on each server.
+* Create a cluster with 1 node on each server. These are your parent processes.
 * On each parent process spawned by this cluster, create **n** child processes,
 where **n** is the number of cores on the box (`detectCores()`).
 * Copy the original data between each box with a key pairing
-* ClusterApplyLB over the keys - each box runs childs processes controlled by a single master process
+* Write function which uses the child cluster for processing
+* Apply function over the keys via the parent cluster - each box runs childs processes controlled by a single master process
 
 
-Why use the second split strategy?
+Why not just make one cluster?
 ==================================================
 
 - **128 node limit only applies to a single cluster object!**
 - As long as you have less than 128 servers, you *should* be good.
 
-![image](minime.jpg)
+![image](splitting_processes.gif)
 
 Extended Clear Capital Example
 ==================================================
 
 
+Caveats
+==================================================
+* Parallel is not always the answer.
+* Parallelism can be difficult to debug.
+
+![img](debugging.gif)
+
+
+When is serial better?
+==================================================
+
+
+Conclusion
+==================================================
+
+* Parallel is great for map-reduce sorts of problems.
+* Clusters are great for managing servers, but can be finicky.
+* Well written serial code is often more performant than poorly written
+parallel code
+
+**Slow serial code is slow parallel code.**
 
