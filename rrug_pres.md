@@ -66,7 +66,7 @@ median(exampleData)
 ```
 
 ```
-[1] 52.97137
+[1] 41.69822
 ```
 
 Is the median accurate?
@@ -84,7 +84,7 @@ system.time(
 
 ```
    user  system elapsed 
-  2.084   0.037   2.125 
+  2.178   0.034   2.219 
 ```
 
 ```r
@@ -92,7 +92,7 @@ mean(medians)
 ```
 
 ```
-[1] 52.95431
+[1] 42.61138
 ```
 
 Resulting Distribution
@@ -118,7 +118,7 @@ system.time(
 
 ```
    user  system elapsed 
-  0.962   0.087   0.540 
+  0.971   0.087   0.539 
 ```
 
 ```r
@@ -126,7 +126,7 @@ mean(unlist(medians))
 ```
 
 ```
-[1] 52.90077
+[1] 42.63273
 ```
 
 Same Distribution!
@@ -155,7 +155,7 @@ system.time(
 
 ```
    user  system elapsed 
-  0.022   0.004   0.514 
+  0.023   0.005   0.531 
 ```
 
 ```r
@@ -183,9 +183,15 @@ The (P)Sock Cluster
 Clusters Compared
 ==================================================
 
+mcLapply
+- Can only be on one machine
+- Implicit Object Sharing
+- Implicit Parallelism
+
+***
+
 Fork Cluster
 - Can only be on one machine
-- No copies of data from core to core
 - Implicit Object Sharing
 - Explicit Parallelism
 
@@ -193,7 +199,6 @@ Fork Cluster
 
 PSOCK Cluster
 - Multiple machines
-- Must copy data between cores
 - Explicit Object Sharing
 - Explicit Parallelism
 

@@ -153,9 +153,15 @@ The (P)Sock Cluster
 Clusters Compared
 ==================================================
 
+mcLapply
+- Can only be on one machine
+- Implicit Object Sharing
+- Implicit Parallelism
+
+***
+
 Fork Cluster
 - Can only be on one machine
-- No copies of data from core to core
 - Implicit Object Sharing
 - Explicit Parallelism
 
@@ -163,7 +169,6 @@ Fork Cluster
 
 PSOCK Cluster
 - Multiple machines
-- Must copy data between cores
 - Explicit Object Sharing
 - Explicit Parallelism
 
